@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工作台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#4f7cff;--primary-dark:#3b63d4;--danger:#e74c3c;--success:#27ae60;--warning:#f39c12;--info:#17a2b8;--bg:#f5f7fa;--card:#fff;--text:#2c3e50;--text-light:#7f8c8d;--border:#e1e8ed;--nav-h:60px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding-bottom:calc(var(--nav-h) + 12px)}
+/* ===== 顶部 ===== */
+.header{background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:100}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;max-width:600px;margin:0 auto}
+.header-title{font-size:20px;font-weight:700}.header-title span{color:var(--primary)}
+.header-date{font-size:12px;color:var(--text-light)}
+/* 子标签 */
+.sub-tabs{display:flex;gap:2px;padding:0 16px;max-width:600px;margin:0 auto;overflow-x:auto}
+.sub-tab{padding:8px 14px;border:none;background:none;font-size:14px;color:var(--text-light);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-weight:500;white-space:nowrap}
+.sub-tab:hover{color:var(--primary)}
+.sub-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+/* ===== 底部导航 ===== */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--card);box-shadow:0 -2px 8px rgba(0,0,0,.06);display:flex;z-index:100;max-width:600px;margin:0 auto}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:all .2s;color:var(--text-light);background:none;border:none;font-family:inherit}
+.nav-item.active{color:var(--primary)}
+.nav-icon{font-size:22px;line-height:1}
+.nav-label{font-size:11px;font-weight:500}
+/* ===== 容器 ===== */
+.container{max-width:600px;margin:0 auto;padding:16px}
+.page{display:none}.page.active{display:block}
+.sub-page{display:none}.sub-page.active{display:block}
+/* ===== 统计卡片 ===== */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);text-align:center}
+.stat-label{font-size:12px;color:var(--text-light);margin-bottom:4px}
+.stat-value{font-size:20px;font-weight:700}
+.stat-value.primary{color:var(--primary)}.stat-value.danger{color:var(--danger)}.stat-value.success{color:var(--success)}.stat-value.warning{color:var(--warning)}.stat-value.info{color:var(--info)}
+/* ===== 卡片 ===== */
+.card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:16px}
+.card-title{font-size:16px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:4px;height:18px;background:var(--primary);border-radius:2px}
+/* ===== 表单 ===== */
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-size:12px;color:var(--text-light);margin-bottom:3px;font-weight:500}
+.form-group input,.form-group select,.form-group textarea{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:#fff;font-family:inherit;width:100%}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary)}
+.form-group textarea{resize:vertical;min-height:36px}
+.form-actions{display:flex;gap:10px;margin-top:8px}
+/* ===== 按钮 ===== */
+.btn{padding:9px 18px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:#ecf0f1;color:var(--text)}.btn-secondary:hover{background:#dfe6e9}
+.btn-danger{background:none;color:var(--danger);padding:4px 10px;font-size:13px}.btn-danger:hover{background:#fdf0ef}
+.btn-small{padding:5px 10px;font-size:13px}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{opacity:.9}
+.btn-warning{background:var(--warning);color:#fff}.btn-warning:hover{opacity:.9}
+/* ===== 筛选 ===== */
+.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.filter-row select,.filter-row input{padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit}
+.filter-row input{flex:1;min-width:100px}
+/* ===== 表格 ===== */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{background:#f8f9fb;font-weight:600;color:var(--text-light);font-size:12px}
+tbody tr:hover{background:#f8f9fb}
+.tag{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;display:inline-block}
+.tag-print{background:#e8f5e9;color:#2e7d32}.tag-noprint{background:#fafafa;color:#bbb}
+.tag-ok{background:#e8f5e9;color:#2e7d32}.tag-fail{background:#fdecea;color:#c62828}
+.tag-taobao{background:#fff4e6;color:#ff6a00}.tag-xianyu{background:#e8f5e9;color:#2e7d32}.tag-pdd{background:#fce4ec;color:#c62828}
+.tag-pending{background:#fff3e0;color:#e65100}.tag-shipped{background:#e3f2fd;color:#1565c0}.tag-done{background:#e8f5e9;color:#2e7d32}.tag-returned{background:#fdecea;color:#c62828}
+.empty-row td{text-align:center;color:var(--text-light);padding:30px}
+/* ===== 设置 ===== */
+.setting-section{margin-bottom:20px}
+.setting-section h3{font-size:15px;margin-bottom:12px;color:var(--text);padding-bottom:6px;border-bottom:2px solid var(--primary);display:inline-block}
+.emp-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.emp-card .emp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.emp-card .emp-name{font-size:16px;font-weight:600}
+.emp-card .emp-status{font-size:12px;padding:2px 8px;border-radius:4px}
+.emp-card .emp-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;font-size:12px;color:var(--text-light)}
+.emp-card .emp-row span{font-weight:500;color:var(--text)}
+/* ===== 日历 ===== */
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:350px}
+.calendar .day-label{text-align:center;font-size:12px;color:var(--text-light);padding:4px}
+.calendar .day{text-align:center;padding:8px 4px;border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s}
+.calendar .day:hover{background:#eef1f5}
+.calendar .day.rest{background:#fdecea;color:var(--danger)}.calendar .day.work{background:#e8f5e9;color:#2e7d32}
+.calendar .day.empty{background:transparent;cursor:default}.calendar .day.empty:hover{background:transparent}
+.calendar .day.sunday{background:#fff3e0;color:#e65100}
+.month-nav{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.month-nav button{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:16px}
+/* ===== 月报 ===== */
+.salary-table td,.salary-table th{text-align:right}
+.salary-table td:first-child,.salary-table th:first-child{text-align:left}
+.summary-row td{font-weight:700;background:#f0f4ff}
+/* ===== 弹窗 ===== */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.modal-content{background:#fff;border-radius:12px;padding:20px;max-width:440px;width:92%;max-height:90vh;overflow-y:auto}
+/* ===== 仪表盘 ===== */
+.dash-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.dash-card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);text-align:center;cursor:pointer;transition:all .2s}
+.dash-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.dash-card .dash-icon{font-size:32px;margin-bottom:8px}
+.dash-card .dash-label{font-size:13px;color:var(--text-light);margin-bottom:4px}
+.dash-card .dash-value{font-size:18px;font-weight:700}
+.alert-banner{background:#fff3e0;border-radius:10px;padding:12px 16px;margin-bottom:16px;border-left:4px solid var(--warning);font-size:13px;display:none}
+.alert-banner.show{display:block}
+.alert-banner b{color:var(--warning)}
+@media(max-width:600px){.header-title{font-size:18px}.stat-value{font-size:18px}.card{padding:14px}.sub-tab{font-size:13px;padding:6px 10px}}
+/* 闪卡翻转动画 */
+#flashcard{cursor:pointer;user-select:none}
+#flashcard:active{opacity:.9}
+.dash-grid{grid-template-columns:repeat(2,1fr)}
+@media(min-width:480px){.dash-grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="header-title" id="appTitle">📦 <span>工作台</span></div>
+    <div class="header-date" id="todayDate"></div>
+  </div>
+  <div class="sub-tabs" id="subTabs"></div>
+</div>
+
+<div class="container">
+
+  <!-- ==================== 首页仪表盘 ==================== -->
+  <div class="page" id="page-home">
+    <div class="alert-banner" id="alertBanner"></div>
+    <div class="stats-row" id="dashStats"></div>
+    <div class="dash-grid">
+      <div class="dash-card" onclick="navTo('salary')">
+        <div class="dash-icon">📋</div>
+        <div class="dash-label">发货工资</div>
+        <div class="dash-value" id="dashSalary" style="color:var(--primary)">—</div>
+      </div>
+      <div class="dash-card" onclick="navTo('returns')">
+        <div class="dash-icon">🔄</div>
+        <div class="dash-label">退货换货</div>
+        <div class="dash-value" id="dashReturns" style="color:var(--warning)">—</div>
+      </div>
+      <div class="dash-card" onclick="navTo('records')">
+        <div class="dash-icon">📦</div>
+        <div class="dash-label">本月发货量</div>
+        <div class="dash-value" id="dashQty" style="color:var(--success)">—</div>
+      </div>
+      <div class="dash-card" onclick="navTo('returns')">
+        <div class="dash-icon">⚠️</div>
+        <div class="dash-label">待处理退货</div>
+        <div class="dash-value" id="dashPending" style="color:var(--danger)">—</div>
+      </div>
+      <div class="dash-card" onclick="navTo('study')">
+        <div class="dash-icon">📚</div>
+        <div class="dash-label">闪卡总数</div>
+        <div class="dash-value" id="dashStudyNew" style="color:var(--info)">—</div>
+      </div>
+      <div class="dash-card" onclick="navTo('study')">
+        <div class="dash-icon">📖</div>
+        <div class="dash-label">待复习</div>
+        <div class="dash-value" id="dashStudy" style="color:var(--warning)">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 发货工资工作台 ==================== -->
+  <div class="page" id="page-salary">
+    <!-- 子页：发货记录 -->
+    <div class="sub-page active" id="sub-records">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="card">
+        <div class="card-title">添加发货记录</div>
+        <form id="addForm" onsubmit="return false">
+          <div class="form-row">
+            <div class="form-group"><label>日期</label><input type="date" id="f_date" required></div>
+            <div class="form-group"><label>员工</label><select id="f_emp" required><option value="">选择员工</option></select></div>
+            <div class="form-group"><label>发货数量</label><input type="number" id="f_qty" min="0" step="0.5" placeholder="0" required></div>
+            <div class="form-group"><label>扣件数</label><input type="number" id="f_deduct" min="0" step="0.5" value="0"></div>
+            <div class="form-group"><label>扣款金额（元）</label><input type="number" id="f_penalty" min="0" step="0.5" value="0" placeholder="如扣5块"></div>
+            <div class="form-group"><label>打印</label><select id="f_print"><option value="无">无</option><option value="有">有</option></select></div>
+            <div class="form-group"><label>加钱（元）</label><input type="number" id="f_bonus" min="0" step="0.5" value="0"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="addRecord()">添加记录</button>
+            <button class="btn btn-secondary" onclick="resetForm()">清空</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-title">发货记录列表</div>
+        <div class="filter-row">
+          <select id="filterMonth" onchange="renderTable()"></select>
+          <select id="filterEmp" onchange="renderTable()"><option value="">全部员工</option></select>
+          <button class="btn btn-secondary btn-small" onclick="clearFilter()">清除</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>日期</th><th>员工</th><th>发货量</th><th>扣件</th><th>扣件费</th><th>扣款</th><th>打印</th><th>达标?</th><th>超出/缺少</th><th>提成/扣款</th><th>加钱</th><th>合计</th><th></th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- 子页：工资月报 -->
+    <div class="sub-page" id="sub-salary">
+      <div class="card">
+        <div class="card-title">工资月报</div>
+        <div class="filter-row">
+          <select id="salaryMonth" onchange="renderSalary()"></select>
+          <button class="btn btn-success btn-small" onclick="exportSalary()">导出月报</button>
+        </div>
+        <div id="salaryContent"></div>
+      </div>
+    </div>
+    <!-- 子页：设置 -->
+    <div class="sub-page" id="sub-settings">
+      <div class="card setting-section">
+        <h3>员工管理</h3>
+        <div id="empList"></div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="showAddEmp()">+ 添加员工</button>
+      </div>
+      <div class="card setting-section">
+        <h3>休息日设置 <small style="font-weight:400;font-size:12px;color:var(--text-light)">（周日自动休息，点击日期切换）</small></h3>
+        <div class="month-nav">
+          <button onclick="calendarShift(-1)">◀</button>
+          <span id="calMonth" style="font-weight:600"></span>
+          <button onclick="calendarShift(1)">▶</button>
+        </div>
+        <div class="calendar" id="calendar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 退货换货工作台 ==================== -->
+  <div class="page" id="page-returns">
+    <div class="stats-row" id="returnStats"></div>
+    <div class="card">
+      <div class="card-title">添加退换货记录</div>
+      <form id="addReturnForm" onsubmit="return false">
+        <div class="form-row">
+          <div class="form-group"><label>日期</label><input type="date" id="r_date" required></div>
+          <div class="form-group"><label>平台</label><select id="r_platform"><option value="淘宝">淘宝</option><option value="闲鱼">闲鱼</option><option value="拼多多">拼多多</option></select></div>
+          <div class="form-group"><label>订单号/买家名</label><input type="text" id="r_order" placeholder="订单号或买家昵称"></div>
+          <div class="form-group"><label>商品名称</label><input type="text" id="r_item" placeholder="退换的商品"></div>
+          <div class="form-group"><label>退换类型</label><select id="r_type"><option value="退货">退货</option><option value="换货">换货</option><option value="维修">维修</option><option value="仅退款">仅退款</option></select></div>
+          <div class="form-group"><label>物流单号</label><input type="text" id="r_tracking" placeholder="退货物流单号"></div>
+          <div class="form-group"><label>涉及金额（元）</label><input type="number" id="r_amount" min="0" step="0.01" value="0"></div>
+          <div class="form-group"><label>处理状态</label><select id="r_status"><option value="待处理">待处理</option><option value="已寄回">已寄回</option><option value="已处理">已处理</option><option value="已退回">已退回</option></select></div>
+          <div class="form-group" style="grid-column:1/-1"><label>备注</label><textarea id="r_note" placeholder="退货原因、商品状况等..."></textarea></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addReturn()">添加记录</button>
+          <button class="btn btn-secondary" onclick="resetReturnForm()">清空</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <div class="card-title">退换货列表</div>
+      <div class="filter-row">
+        <select id="filterReturnPlatform" onchange="renderReturns()"><option value="">全部平台</option><option value="淘宝">淘宝</option><option value="闲鱼">闲鱼</option><option value="拼多多">拼多多</option></select>
+        <select id="filterReturnStatus" onchange="renderReturns()"><option value="">全部状态</option><option value="待处理">待处理</option><option value="已寄回">已寄回</option><option value="已处理">已处理</option><option value="已退回">已退回</option></select>
+        <select id="filterReturnMonth" onchange="renderReturns()"></select>
+      </div>
+      <div id="returnList"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 学习复习工作台 ==================== -->
+  <div class="page" id="page-study">
+    <!-- 子页：今日复习 -->
+    <div class="sub-page active" id="sub-review">
+      <div class="stats-row" id="studyStats"></div>
+      <div class="card" style="text-align:center;min-height:300px;display:flex;flex-direction:column;justify-content:center;align-items:center">
+        <div id="flashcard" style="width:100%;cursor:pointer" onclick="flipCard()">
+          <div id="flashcardFront" style="display:block">
+            <div style="font-size:13px;color:var(--text-light);margin-bottom:8px" id="cardSource"></div>
+            <div style="font-size:13px;color:var(--primary);margin-bottom:12px" id="cardType"></div>
+            <div style="font-size:18px;font-weight:600;line-height:1.8;padding:20px" id="cardQuestion">点击「开始今日复习」</div>
+          </div>
+          <div id="flashcardBack" style="display:none">
+            <div style="font-size:13px;color:var(--success);margin-bottom:12px">答案</div>
+            <div style="font-size:16px;line-height:1.8;padding:20px;white-space:pre-wrap;background:#f8f9fb;border-radius:8px" id="cardAnswer"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">
+        <button class="btn btn-secondary" onclick="flipCard()" id="flipBtn" style="display:none">👆 点击卡片或这里翻面</button>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px" id="masteryBtns">
+        <button class="btn btn-danger btn-small" onclick="markMastery('不熟')" style="display:none">😞 没想起来</button>
+        <button class="btn btn-warning btn-small" onclick="markMastery('一般')" style="display:none">😐 有印象</button>
+        <button class="btn btn-success btn-small" onclick="markMastery('掌握')" style="display:none">😊 记住了</button>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;align-items:center">
+        <button class="btn btn-secondary btn-small" onclick="prevCard()" id="prevBtn" style="display:none">上一张</button>
+        <span style="font-size:13px;color:var(--text-light)" id="cardPos"></span>
+        <button class="btn btn-secondary btn-small" onclick="nextCard()" id="nextBtn" style="display:none">下一张</button>
+        <button class="btn btn-primary btn-small" onclick="startReview()" id="startBtn">开始今日复习</button>
+      </div>
+    </div>
+    <!-- 子页：资料管理 -->
+    <div class="sub-page" id="sub-cards">
+      <div class="card">
+        <div class="card-title">上传学习资料</div>
+        <div style="border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center">
+          <input type="file" id="txtInput" accept=".txt,.md" style="display:none" onchange="handleTxtUpload(event)">
+          <div style="font-size:32px;margin-bottom:8px">📝</div>
+          <div style="font-size:14px;color:var(--text-light);margin-bottom:12px">上传txt/md文件，系统自动生成复习卡片</div>
+          <button class="btn btn-primary" onclick="document.getElementById('txtInput').click()">选择文件</button>
+          <div id="txtStatus" style="font-size:13px;margin-top:10px"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text-light);margin-top:8px;line-height:1.6">
+          上传后会自动生成两种卡片：<br>
+          ① <b>挖空题</b>：从资料中提取关键句，挖掉一个词让你回忆<br>
+          ② <b>问答题</b>：取一段内容做问题，原文做答案
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">资料库</div>
+        <div id="docList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">复习卡片预览</div>
+        <div class="filter-row">
+          <select id="filterCardSource" onchange="renderCardList()"></select>
+          <select id="filterCardMastery" onchange="renderCardList()"><option value="">全部掌握度</option><option value="未复习">未复习</option><option value="不熟">不熟</option><option value="一般">一般</option><option value="掌握">掌握</option></select>
+        </div>
+        <div id="cardList"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="navTo('home')"><span class="nav-icon">🏠</span><span class="nav-label">首页</span></button>
+  <button class="nav-item" onclick="navTo('salary')"><span class="nav-icon">📋</span><span class="nav-label">发货工资</span></button>
+  <button class="nav-item" onclick="navTo('returns')"><span class="nav-icon">🔄</span><span class="nav-label">退换货</span></button>
+  <button class="nav-item" onclick="navTo('study')"><span class="nav-icon">📚</span><span class="nav-label">学习</span></button>
+</nav>
+
+<!-- ===== 员工编辑弹窗 ===== -->
+<div class="modal" id="empModal">
+  <div class="modal-content">
+    <h3 style="margin-bottom:16px" id="empModalTitle">添加员工</h3>
+    <div class="form-group" style="margin-bottom:10px"><label>姓名</label><input type="text" id="e_name" required></div>
+    <div class="form-group" style="margin-bottom:10px"><label>月基本工资（元）</label><input type="number" id="e_base" min="0" step="1" value="4750"></div>
+    <div class="form-group" style="margin-bottom:10px"><label>路费补贴（元/月）</label><input type="number" id="e_transport" min="0" step="1" value="500"></div>
+    <div class="form-group" style="margin-bottom:10px"><label>有打印时达标件数/天</label><input type="number" id="e_target_print" min="0" step="1" value="6"></div>
+    <div class="form-group" style="margin-bottom:10px"><label>无打印时达标件数/天</label><input type="number" id="e_target_noprint" min="0" step="1" value="12"></div>
+    <div class="form-group" style="margin-bottom:10px"><label>提成单价（元/件）</label><input type="number" id="e_commission" min="0" step="0.01" value="10"></div>
+    <div class="form-group" style="margin-bottom:10px"><label>扣件单价（元/件）</label><input type="number" id="e_deduct_price" min="0" step="0.01" value="13"></div>
+    <div class="form-group" style="margin-bottom:16px"><label>状态</label><select id="e_status"><option value="在职">在职</option><option value="待入岗">待入岗</option></select></div>
+    <input type="hidden" id="e_id">
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="saveEmp()">保存</button>
+      <button class="btn btn-secondary" onclick="closeEmpModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== 数据存储 =====================
+const K_RECORDS='salary_records', K_EMPS='salary_emps', K_REST='salary_rest', K_RETURNS='return_records', K_CARDS='flash_cards', K_DOCS='study_docs';
+const DEDUCT_PRICE=13;
+
+let records = JSON.parse(localStorage.getItem(K_RECORDS)||'[]');
+let employees = JSON.parse(localStorage.getItem(K_EMPS)||'[]');
+let restDays = JSON.parse(localStorage.getItem(K_REST)||'[]');
+let returns = JSON.parse(localStorage.getItem(K_RETURNS)||'[]');
+let flashcards = JSON.parse(localStorage.getItem(K_CARDS)||'[]');
+let studyDocs = JSON.parse(localStorage.getItem(K_DOCS)||'[]');
+
+function initEmployees(){
+  if(employees.length===0){
+    employees=[
+      {id:'emp_1',name:'陈学堋',baseSalary:4750,transport:500,targetPrint:6,targetNoprint:12,commission:10,deductPrice:13,status:'在职'},
+      {id:'emp_2',name:'彭善萌',baseSalary:4750,transport:500,targetPrint:12,targetNoprint:12,commission:10,deductPrice:13,status:'待入岗'}
+    ];
+    saveEmps();
+  }
+}
+function saveEmps(){localStorage.setItem(K_EMPS,JSON.stringify(employees))}
+function saveRecords(){localStorage.setItem(K_RECORDS,JSON.stringify(records))}
+function saveRest(){localStorage.setItem(K_REST,JSON.stringify(restDays))}
+function saveReturns(){localStorage.setItem(K_RETURNS,JSON.stringify(returns))}
+function saveCards(){localStorage.setItem(K_CARDS,JSON.stringify(flashcards))}
+function saveDocs(){localStorage.setItem(K_DOCS,JSON.stringify(studyDocs))}
+initEmployees();
+
+const today=new Date();
+const todayStr=today.toISOString().slice(0,10);
+const todayMonth=todayStr.slice(0,7);
+document.getElementById('todayDate').textContent=today.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+document.getElementById('f_date').value=todayStr;
+document.getElementById('r_date').value=todayStr;
+
+function getEmp(id){return employees.find(e=>e.id===id)}
+function isRestDay(ds){if(restDays.includes(ds))return true;const d=new Date(ds);return d.getDay()===0}
+function getWorkDays(y,m){let c=0;const days=new Date(y,m+1,0).getDate();for(let d=1;d<=days;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;if(!isRestDay(ds))c++}return c}
+function getActualWorkDays(empId,y,m){const prefix=`${y}-${String(m+1).padStart(2,'0')}`;const dates=new Set();records.forEach(r=>{if(r.empId===empId&&r.date.startsWith(prefix)&&!isRestDay(r.date))dates.add(r.date)});return dates.size}
+
+function calcDay(r){
+  const emp=getEmp(r.empId);
+  if(!emp)return{target:0,isMet:false,diff:0,commission:0,deductFee:0,total:0,bonus:0};
+  const target=r.print==='有'?emp.targetPrint:emp.targetNoprint;
+  const isMet=r.qty>=target;
+  const diff=r.qty-target;
+  const deductFee=(r.deduct||0)*(emp.deductPrice||DEDUCT_PRICE);
+  const bonus=r.bonus||0;
+  let dayCommission=0;
+  if(diff>0)dayCommission=diff*emp.commission;
+  else if(diff<0)dayCommission=diff*(emp.deductPrice||DEDUCT_PRICE);
+  const penalty=r.penalty||0;
+  const dayTotal=dayCommission-deductFee-penalty+bonus;
+  return{target,isMet,diff,commission:dayCommission,deductFee,bonus,penalty,total:dayTotal};
+}
+
+function calcMonthSalary(empId,y,m){
+  const emp=getEmp(empId);if(!emp)return null;
+  const prefix=`${y}-${String(m+1).padStart(2,'0')}`;
+  const mr=records.filter(r=>r.empId===empId&&r.date.startsWith(prefix));
+  const wd=getWorkDays(y,m),ad=getActualWorkDays(empId,y,m);
+  let tc=0,tdf=0,tp=0,tb=0,met=0,fail=0,tq=0,tdc=0;
+  mr.forEach(r=>{const d=calcDay(r);tc+=d.commission;tdf+=d.deductFee;tp+=(r.penalty||0);tb+=d.bonus;tq+=r.qty;tdc+=(r.deduct||0);if(d.isMet)met++;else fail++});
+  const isFull=ad>=wd;
+  const fs=wd>0?(emp.baseSalary+emp.transport)*Math.min(ad/wd,1):0;
+  const final=fs+tc+tb-tdf-tp;
+  return{emp,workDays:wd,actualDays:ad,isFull,fixedSalary:fs,totalCommission:tc,totalDeductFee:tdf,totalPenalty:tp,totalBonus:tb,totalQty:tq,totalDeductCnt:tdc,metDays:met,failDays:fail,finalSalary:final,monthRecords:mr};
+}
+
+// ==================== 导航 ====================
+function navTo(name){
+  document.querySelectorAll('.nav-item').forEach((n,i)=>{const pages=['home','salary','returns','study'];n.classList.toggle('active',pages[i]===name)});
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const titles={'home':'📦 <span>工作台</span>','salary':'📋 发货<span>工资</span>','returns':'🔄 退货<span>换货</span>','study':'📚 <span>学习</span>复习'};
+  document.getElementById('appTitle').innerHTML=titles[name];
+  renderSubTabs(name);
+  if(name==='home')renderDashboard();
+  if(name==='salary')renderTable();
+  if(name==='returns')renderReturns();
+  if(name==='study')renderStudyStats();
+}
+
+function renderSubTabs(page){
+  const el=document.getElementById('subTabs');
+  if(page==='salary'){
+    el.innerHTML=`
+      <button class="sub-tab active" onclick="switchSub('records')">发货记录</button>
+      <button class="sub-tab" onclick="switchSub('salary')">工资月报</button>
+      <button class="sub-tab" onclick="switchSub('settings')">设置</button>`;
+  } else if(page==='study'){
+    el.innerHTML=`
+      <button class="sub-tab active" onclick="switchSub('review')">今日复习</button>
+      <button class="sub-tab" onclick="switchSub('cards')">卡片管理</button>`;
+  } else {
+    el.innerHTML='';
+  }
+}
+
+function switchSub(name){
+  const subsMap={'records':['records','salary','settings'],'review':['review','cards']};
+  document.querySelectorAll('.sub-tab').forEach((t,i)=>{const subs=subsMap[Object.keys(subsMap).find(k=>subsMap[k].includes(name))]||[];t.classList.toggle('active',subs[i]===name)});
+  document.querySelectorAll('.sub-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('sub-'+name).classList.add('active');
+  if(name==='salary')renderSalary();
+  if(name==='settings'){renderEmpList();renderCalendar()}
+  if(name==='review')startReview();
+  if(name==='cards'){renderDocList();renderCardList()}
+}
+
+// ==================== 仪表盘 ====================
+function renderDashboard(){
+  const [y,m]=todayMonth.split('-').map(Number);
+  let totalQty=0,pendingReturns=0;
+  records.forEach(r=>{if(r.date.startsWith(todayMonth))totalQty+=r.qty});
+  const pending=returns.filter(r=>r.status==='待处理');
+  pendingReturns=pending.length;
+
+  let totalSalary=0;
+  employees.forEach(emp=>{const r=calcMonthSalary(emp.id,y-0,m-1);if(r&&r.monthRecords.length>0)totalSalary+=r.finalSalary});
+
+  document.getElementById('dashQty').textContent=totalQty+'件';
+  document.getElementById('dashSalary').textContent='≈'+totalSalary.toFixed(0)+'元';
+  document.getElementById('dashReturns').textContent=returns.filter(r=>r.date.startsWith(todayMonth)).length+'单';
+  document.getElementById('dashPending').textContent=pendingReturns+'单';
+
+  const ab=document.getElementById('alertBanner');
+  let alerts=[];
+  if(pendingReturns>0)alerts.push(`有 <b>${pendingReturns}</b> 单退货待处理，平台可能自动退款，请尽快找件！`);
+  const needReview=flashcards.filter(c=>c.mastery!=='掌握').length;
+  if(needReview>0)alerts.push(`有 <b>${needReview}</b> 张闪卡待复习，点击学习开始今日复习！`);
+  if(alerts.length>0){
+    ab.innerHTML='⚠️ <b>提醒</b>：'+alerts.join('；');
+    ab.className='alert-banner show';
+  } else {
+    ab.className='alert-banner';
+  }
+  // 学习统计
+  const ds=document.getElementById('dashStudy');
+  if(ds)ds.textContent=needReview+'张';
+  const dsn=document.getElementById('dashStudyNew');
+  if(dsn)dsn.textContent=flashcards.length+'张';
+}
+
+// ==================== 发货记录 ====================
+function renderEmpSelects(){
+  const activeEmps=employees.filter(e=>e.status==='在职');
+  document.getElementById('f_emp').innerHTML='<option value="">选择员工</option>'+activeEmps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  const fs=document.getElementById('filterEmp');const cur=fs.value;
+  fs.innerHTML='<option value="">全部员工</option>'+employees.map(e=>`<option value="${e.id}" ${e.id===cur?'selected':''}>${e.name} (${e.status})</option>`).join('');
+  const months=new Set();records.forEach(r=>{months.add(r.date.slice(0,7))});
+  const fm=document.getElementById('filterMonth');const fcur=fm.value;
+  fm.innerHTML=[...months].sort().reverse().map(m=>`<option value="${m}" ${m===todayMonth&&!fcur?'selected':m===fcur?'selected':''}>${m}</option>`).join('');
+  if(!fm.value)fm.value=todayMonth;
+  const sm=document.getElementById('salaryMonth');
+  sm.innerHTML=[...months].sort().reverse().map(m=>`<option value="${m}" ${m===todayMonth?'selected':''}>${m}</option>`).join('');
+  if(!sm.value)sm.value=todayMonth;
+}
+
+function addRecord(){
+  const empId=document.getElementById('f_emp').value;
+  if(!empId){alert('请选择员工');return}
+  const qty=+document.getElementById('f_qty').value||0;
+  if(qty<=0){alert('请填写发货数量');return}
+  records.push({id:Date.now(),date:document.getElementById('f_date').value,empId,qty,deduct:+document.getElementById('f_deduct').value||0,penalty:+document.getElementById('f_penalty').value||0,print:document.getElementById('f_print').value,bonus:+document.getElementById('f_bonus').value||0});
+  saveRecords();resetForm();renderTable();
+}
+function resetForm(){document.getElementById('addForm').reset();document.getElementById('f_date').value=todayStr;document.getElementById('f_deduct').value=0;document.getElementById('f_penalty').value=0;document.getElementById('f_bonus').value=0}
+function delRecord(id){if(!confirm('确定删除？'))return;records=records.filter(r=>r.id!==id);saveRecords();renderTable()}
+function getFilteredRecords(){const month=document.getElementById('filterMonth').value;const empId=document.getElementById('filterEmp').value;return records.filter(r=>{if(month&&!r.date.startsWith(month))return false;if(empId&&r.empId!==empId)return false;return true}).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id)}
+
+function renderStats(){
+  const data=getFilteredRecords();
+  let tq=0,tc=0,tdf=0,tp=0,tb=0,tdc=0;
+  data.forEach(r=>{const d=calcDay(r);tq+=r.qty;tc+=d.commission;tdf+=d.deductFee;tp+=(r.penalty||0);tb+=d.bonus;tdc+=(r.deduct||0)});
+  const net=tc+tb-tdf-tp;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="stat-label">发货总量</div><div class="stat-value primary">${tq}</div></div>
+    <div class="stat-card"><div class="stat-label">扣件数</div><div class="stat-value warning">${tdc} 件</div></div>
+    <div class="stat-card"><div class="stat-label">提成/扣款</div><div class="stat-value ${tc>=0?'success':'danger'}">${tc>=0?'+':''}${tc.toFixed(0)} 元</div></div>
+    <div class="stat-card"><div class="stat-label">扣件费</div><div class="stat-value danger">-${tdf.toFixed(0)} 元</div></div>
+    <div class="stat-card"><div class="stat-label">扣款</div><div class="stat-value danger">-${tp.toFixed(0)} 元</div></div>
+    <div class="stat-card"><div class="stat-label">加钱</div><div class="stat-value success">+${tb.toFixed(0)} 元</div></div>
+    <div class="stat-card"><div class="stat-label">合计</div><div class="stat-value ${net>=0?'success':'danger'}">${net>=0?'+':''}${net.toFixed(0)} 元</div></div>`;
+}
+
+function renderTable(){
+  renderEmpSelects();
+  const data=getFilteredRecords();
+  const tb=document.getElementById('tbody');
+  if(data.length===0){tb.innerHTML='<tr class="empty-row"><td colspan="13">暂无记录</td></tr>'}
+  else{tb.innerHTML=data.map(r=>{const emp=getEmp(r.empId);const d=calcDay(r);return`<tr>
+    <td>${r.date}</td><td>${emp?emp.name:'?'}</td><td><b>${r.qty}</b></td>
+    <td>${r.deduct||'—'}</td><td>${d.deductFee>0?'-'+d.deductFee.toFixed(0):'—'}</td><td>${r.penalty>0?'-'+r.penalty:'—'}</td>
+    <td><span class="tag ${r.print==='有'?'tag-print':'tag-noprint'}">${r.print}</span></td>
+    <td><span class="tag ${d.isMet?'tag-ok':'tag-fail'}">${d.isMet?'达标':'未达标'}</span></td>
+    <td style="color:${d.diff>=0?'var(--success)':'var(--danger)'}">${d.diff>0?'+'+d.diff+'件':d.diff<0?d.diff+'件':'—'}</td>
+    <td style="color:${d.commission>=0?'var(--success)':'var(--danger)'};font-weight:500">${d.commission>0?'+'+d.commission.toFixed(0):d.commission<0?d.commission.toFixed(0)+'元':'—'}</td>
+    <td>${d.bonus>0?'+'+d.bonus:'—'}</td>
+    <td style="font-weight:600;color:${d.total>=0?'var(--success)':'var(--danger)'}">${d.total>=0?'+':''}${d.total.toFixed(0)} 元</td>
+    <td><button class="btn btn-danger" onclick="delRecord(${r.id})">删除</button></td></tr>`}).join('')}
+  renderStats();
+}
+function clearFilter(){document.getElementById('filterMonth').value='';document.getElementById('filterEmp').value='';renderTable()}
+
+// ==================== 工资月报 ====================
+function renderSalary(){
+  const month=document.getElementById('salaryMonth').value;if(!month)return;
+  const[y,m]=month.split('-').map(Number);
+  let html='';
+  employees.forEach(emp=>{
+    const r=calcMonthSalary(emp.id,y-0,m-1);
+    if(!r||r.monthRecords.length===0)return;
+    html+=`<div style="margin-bottom:16px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="background:#f0f4ff;padding:10px 14px;font-weight:600;font-size:15px">${emp.name} <span style="font-weight:400;font-size:12px;color:var(--text-light)">(${emp.status})</span></div>
+      <div style="padding:14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:14px;font-size:13px">
+          <div><span style="color:var(--text-light)">应出勤：</span><b>${r.workDays}天</b></div>
+          <div><span style="color:var(--text-light)">实际：</span><b>${r.actualDays}天</b></div>
+          <div><span style="color:var(--text-light)">满勤：</span><b style="color:${r.isFull?'var(--success)':'var(--danger)'}">${r.isFull?'是':'否'}</b></div>
+          <div><span style="color:var(--text-light)">达标：</span><b style="color:var(--success)">${r.metDays}天</b></div>
+          <div><span style="color:var(--text-light)">未达标：</span><b style="color:var(--danger)">${r.failDays}天</b></div>
+        </div>
+        <table style="width:100%" class="salary-table">
+          <tr><td>月固定工资</td><td>${emp.baseSalary}+${emp.transport}</td><td style="color:var(--primary)">${r.fixedSalary.toFixed(0)}元</td></tr>
+          <tr><td>提成/扣款</td><td></td><td style="color:${r.totalCommission>=0?'var(--success)':'var(--danger)'}">${r.totalCommission>=0?'+':''}${r.totalCommission.toFixed(0)}元</td></tr>
+          <tr><td>扣件费</td><td>${r.totalDeductCnt}件×${emp.deductPrice||DEDUCT_PRICE}元</td><td style="color:var(--danger)">-${r.totalDeductFee.toFixed(0)}元</td></tr>
+          <tr><td>其他扣款</td><td></td><td style="color:var(--danger)">-${r.totalPenalty.toFixed(0)}元</td></tr>
+          <tr><td>加钱</td><td></td><td style="color:var(--success)">+${r.totalBonus.toFixed(0)}元</td></tr>
+          <tr class="summary-row"><td>实发工资</td><td></td><td style="font-size:16px;color:var(--primary)">${r.finalSalary.toFixed(0)}元</td></tr>
+        </table>
+      </div></div>`;
+  });
+  if(!html)html='<p style="text-align:center;color:var(--text-light);padding:20px">该月份暂无数据</p>';
+  document.getElementById('salaryContent').innerHTML=html;
+}
+
+function exportSalary(){
+  const month=document.getElementById('salaryMonth').value;if(!month){alert('请选择月份');return}
+  const[y,m]=month.split('-').map(Number);
+  let csv='\ufeff'+`工资月报 - ${month}\n\n`;
+  csv+='员工,基本工资,路费补贴,应出勤(天),实际出勤(天),满勤,固定工资,提成/扣款,扣件费,其他扣款,加钱,实发工资\n';
+  employees.forEach(emp=>{const r=calcMonthSalary(emp.id,y-0,m-1);if(!r||r.monthRecords.length===0)return;csv+=`${emp.name},${emp.baseSalary},${emp.transport},${r.workDays},${r.actualDays},${r.isFull?'是':'否'},${r.fixedSalary.toFixed(0)},${r.totalCommission.toFixed(0)},${r.totalDeductFee.toFixed(0)},${r.totalPenalty.toFixed(0)},${r.totalBonus.toFixed(0)},${r.finalSalary.toFixed(0)}\n`});
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`工资月报_${month}.csv`;a.click();URL.revokeObjectURL(url);
+}
+
+// ==================== 员工管理 ====================
+function renderEmpList(){document.getElementById('empList').innerHTML=employees.map(e=>`
+  <div class="emp-card"><div class="emp-header"><span class="emp-name">${e.name}</span><span class="emp-status" style="background:${e.status==='在职'?'#e8f5e9':'#fafafa'};color:${e.status==='在职'?'#2e7d32':'#999'}">${e.status}</span></div>
+  <div class="emp-row"><div>基本工资：<span>${e.baseSalary}元</span></div><div>路费补贴：<span>${e.transport}元</span></div><div>有打印达标：<span>${e.targetPrint}件/天</span></div><div>无打印达标：<span>${e.targetNoprint}件/天</span></div><div>提成：<span>${e.commission}元/件</span></div><div>扣件：<span>${e.deductPrice}元/件</span></div></div>
+  <div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-secondary btn-small" onclick="editEmp('${e.id}')">编辑</button><button class="btn btn-danger" onclick="deleteEmp('${e.id}')">删除</button></div></div>`).join('')}
+
+function showAddEmp(){document.getElementById('empModalTitle').textContent='添加员工';document.getElementById('e_id').value='';document.getElementById('e_name').value='';document.getElementById('e_base').value=4750;document.getElementById('e_transport').value=500;document.getElementById('e_target_print').value=6;document.getElementById('e_target_noprint').value=12;document.getElementById('e_commission').value=10;document.getElementById('e_deduct_price').value=13;document.getElementById('e_status').value='在职';document.getElementById('empModal').style.display='flex'}
+function editEmp(id){const e=getEmp(id);if(!e)return;document.getElementById('empModalTitle').textContent='编辑员工';document.getElementById('e_id').value=e.id;document.getElementById('e_name').value=e.name;document.getElementById('e_base').value=e.baseSalary;document.getElementById('e_transport').value=e.transport;document.getElementById('e_target_print').value=e.targetPrint;document.getElementById('e_target_noprint').value=e.targetNoprint;document.getElementById('e_commission').value=e.commission;document.getElementById('e_deduct_price').value=e.deductPrice||DEDUCT_PRICE;document.getElementById('e_status').value=e.status;document.getElementById('empModal').style.display='flex'}
+function closeEmpModal(){document.getElementById('empModal').style.display='none'}
+function saveEmp(){const id=document.getElementById('e_id').value;const name=document.getElementById('e_name').value.trim();if(!name){alert('请输入姓名');return}const data={id:id||('emp_'+Date.now()),name,baseSalary:+document.getElementById('e_base').value||0,transport:+document.getElementById('e_transport').value||0,targetPrint:+document.getElementById('e_target_print').value||0,targetNoprint:+document.getElementById('e_target_noprint').value||0,commission:+document.getElementById('e_commission').value||0,deductPrice:+document.getElementById('e_deduct_price').value||DEDUCT_PRICE,status:document.getElementById('e_status').value};if(id){const i=employees.findIndex(e=>e.id===id);if(i>=0)employees[i]=data}else employees.push(data);saveEmps();closeEmpModal();renderEmpList();renderEmpSelects();renderTable()}
+function deleteEmp(id){const e=getEmp(id);if(!e)return;if(!confirm(`确定删除员工「${e.name}」？\n（相关记录不会被删除）`))return;employees=employees.filter(e=>e.id!==id);saveEmps();renderEmpList();renderEmpSelects();renderTable()}
+
+// ==================== 日历 ====================
+let calYear=today.getFullYear(),calMonth=today.getMonth();
+function renderCalendar(){
+  document.getElementById('calMonth').textContent=`${calYear}年${calMonth+1}月`;
+  const dim=new Date(calYear,calMonth+1,0).getDate(),fd=new Date(calYear,calMonth,1).getDay();
+  const labels=['日','一','二','三','四','五','六'];let html=labels.map(l=>`<div class="day-label">${l}</div>`).join('');
+  for(let i=0;i<fd;i++)html+='<div class="day empty"></div>';
+  for(let d=1;d<=dim;d++){const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const dow=new Date(calYear,calMonth,d).getDay();const rest=isRestDay(ds);let cls='day ';if(rest)cls+=dow===0?'sunday rest':'rest';else cls+='work';html+=`<div class="${cls}" onclick="toggleRestDay('${ds}')">${d}</div>`}
+  document.getElementById('calendar').innerHTML=html;
+}
+function calendarShift(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++}if(calMonth<0){calMonth=11;calYear--}renderCalendar()}
+function toggleRestDay(ds){const i=restDays.indexOf(ds);if(i>=0)restDays.splice(i,1);else{const d=new Date(ds);if(d.getDay()===0){alert('周日默认休息');return}restDays.push(ds)}saveRest();renderCalendar()}
+
+// ==================== 退货换货 ====================
+function addReturn(){
+  const date=document.getElementById('r_date').value;
+  if(!date){alert('请选择日期');return}
+  returns.push({
+    id:Date.now(),
+    date,
+    platform:document.getElementById('r_platform').value,
+    order:document.getElementById('r_order').value.trim(),
+    item:document.getElementById('r_item').value.trim(),
+    type:document.getElementById('r_type').value,
+    tracking:document.getElementById('r_tracking').value.trim(),
+    amount:+document.getElementById('r_amount').value||0,
+    status:document.getElementById('r_status').value,
+    note:document.getElementById('r_note').value.trim()
+  });
+  saveReturns();resetReturnForm();renderReturns();
+}
+function resetReturnForm(){document.getElementById('addReturnForm').reset();document.getElementById('r_date').value=todayStr;document.getElementById('r_amount').value=0}
+function delReturn(id){if(!confirm('确定删除？'))return;returns=returns.filter(r=>r.id!==id);saveReturns();renderReturns()}
+function updateReturnStatus(id,status){const r=returns.find(r=>r.id===id);if(r){r.status=status;saveReturns();renderReturns()}}
+
+function getFilteredReturns(){
+  const p=document.getElementById('filterReturnPlatform').value;
+  const s=document.getElementById('filterReturnStatus').value;
+  const m=document.getElementById('filterReturnMonth').value;
+  return returns.filter(r=>{if(p&&r.platform!==p)return false;if(s&&r.status!==s)return false;if(m&&!r.date.startsWith(m))return false;return true}).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+}
+
+function renderReturnStats(){
+  const data=getFilteredReturns();
+  let total=0,pending=0,shipped=0,done=0,amount=0;
+  data.forEach(r=>{total++;amount+=r.amount;if(r.status==='待处理')pending++;else if(r.status==='已寄回')shipped++;else if(r.status==='已处理'||r.status==='已退回')done++});
+  document.getElementById('returnStats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">退换货总数</div><div class="stat-value warning">${total} 单</div></div>
+    <div class="stat-card"><div class="stat-label">待处理</div><div class="stat-value danger">${pending} 单</div></div>
+    <div class="stat-card"><div class="stat-label">已寄回</div><div class="stat-value info">${shipped} 单</div></div>
+    <div class="stat-card"><div class="stat-label">已处理</div><div class="stat-value success">${done} 单</div></div>
+    <div class="stat-card"><div class="stat-label">涉及金额</div><div class="stat-value primary">${amount.toFixed(0)} 元</div></div>`;
+}
+
+function renderReturns(){
+  // 月份下拉
+  const months=new Set();returns.forEach(r=>months.add(r.date.slice(0,7)));
+  const fm=document.getElementById('filterReturnMonth');const cur=fm.value;
+  fm.innerHTML='<option value="">全部月份</option>'+[...months].sort().reverse().map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+
+  const data=getFilteredReturns();
+  renderReturnStats();
+  const el=document.getElementById('returnList');
+  if(data.length===0){el.innerHTML='<div style="text-align:center;color:var(--text-light);padding:30px">暂无退换货记录</div>';return}
+
+  const platformTag={'淘宝':'tag-taobao','闲鱼':'tag-xianyu','拼多多':'tag-pdd'};
+  const statusTag={'待处理':'tag-pending','已寄回':'tag-shipped','已处理':'tag-done','已退回':'tag-returned'};
+  el.innerHTML=data.map(r=>`
+    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;${r.status==='待处理'?'border-left:4px solid var(--warning)':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="tag ${platformTag[r.platform]||''}">${r.platform}</span>
+          <span class="tag ${statusTag[r.status]||''}">${r.status}</span>
+          <span style="font-size:12px;color:var(--text-light)">${r.date}</span>
+        </div>
+        <button class="btn btn-danger" onclick="delReturn(${r.id})">删除</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;margin-bottom:6px">
+        ${r.order?`<div><span style="color:var(--text-light)">订单/买家：</span><b>${r.order}</b></div>`:''}
+        ${r.item?`<div><span style="color:var(--text-light)">商品：</span><b>${r.item}</b></div>`:''}
+        ${r.type?`<div><span style="color:var(--text-light)">类型：</span>${r.type}</div>`:''}
+        ${r.amount>0?`<div><span style="color:var(--text-light)">金额：</span><b style="color:var(--danger)">${r.amount}元</b></div>`:''}
+        ${r.tracking?`<div><span style="color:var(--text-light)">物流：</span>${r.tracking}</div>`:''}
+      </div>
+      ${r.note?`<div style="font-size:13px;color:var(--text-light);background:#f8f9fb;padding:8px 10px;border-radius:6px;margin-top:6px">📝 ${r.note}</div>`:''}
+      <div style="margin-top:8px;display:flex;gap:6px">
+        ${r.status==='待处理'?`<button class="btn btn-warning btn-small" onclick="updateReturnStatus(${r.id},'已寄回')">标记已寄回</button>`:''}
+        ${r.status==='待处理'||r.status==='已寄回'?`<button class="btn btn-success btn-small" onclick="updateReturnStatus(${r.id},'已处理')">标记已处理</button>`:''}
+        ${r.status==='已处理'?`<button class="btn btn-secondary btn-small" onclick="updateReturnStatus(${r.id},'已退回')">改为已退回</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ==================== 学习复习 ====================
+let reviewQueue=[];
+let reviewIdx=0;
+let isFlipped=false;
+
+function renderStudyStats(){
+  const total=flashcards.length;
+  const mastered=flashcards.filter(c=>c.mastery==='掌握').length;
+  const needReview=flashcards.filter(c=>c.mastery!=='掌握').length;
+  const unfamiliar=flashcards.filter(c=>c.mastery==='不熟'||!c.mastery||c.mastery==='未复习').length;
+  const todayReviewed=flashcards.filter(c=>c.lastReview===todayStr).length;
+  document.getElementById('studyStats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">总卡片</div><div class="stat-value primary">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">今日已复习</div><div class="stat-value info">${todayReviewed}</div></div>
+    <div class="stat-card"><div class="stat-label">待复习</div><div class="stat-value warning">${needReview}</div></div>
+    <div class="stat-card"><div class="stat-label">已掌握</div><div class="stat-value success">${mastered}</div></div>`;
+}
+
+function startReview(){
+  // 优先复习不熟和未复习的
+  reviewQueue=[
+    ...flashcards.filter(c=>!c.mastery||c.mastery==='未复习'),
+    ...flashcards.filter(c=>c.mastery==='不熟'),
+    ...flashcards.filter(c=>c.mastery==='一般'),
+    ...flashcards.filter(c=>c.mastery==='掌握')
+  ].slice(0,20); // 每天最多20张
+  reviewIdx=0;isFlipped=false;
+  if(reviewQueue.length===0){
+    document.getElementById('cardQuestion').textContent='暂无卡片，请先在「资料管理」中上传学习资料';
+    document.getElementById('cardAnswer').textContent='';
+    document.getElementById('cardSource').textContent='';
+    document.getElementById('cardType').textContent='';
+    document.getElementById('flipBtn').style.display='none';
+    document.querySelectorAll('#masteryBtns button').forEach(b=>b.style.display='none');
+    document.getElementById('cardPos').textContent='';
+    document.getElementById('startBtn').style.display='inline-block';
+    document.getElementById('prevBtn').style.display='none';
+    document.getElementById('nextBtn').style.display='none';
+    return;
+  }
+  document.getElementById('startBtn').style.display='none';
+  document.getElementById('prevBtn').style.display='inline-block';
+  document.getElementById('nextBtn').style.display='inline-block';
+  showCard();
+}
+
+function showCard(){
+  if(reviewIdx>=reviewQueue.length){
+    if(confirm('🎉 今日卡片全部复习完！\n是否从头再来一轮？')){reviewIdx=0;showCard()}
+    else{reviewIdx--}
+    return;
+  }
+  if(reviewIdx<0)reviewIdx=reviewQueue.length-1;
+  const card=reviewQueue[reviewIdx];
+  isFlipped=false;
+  document.getElementById('flashcardFront').style.display='block';
+  document.getElementById('flashcardBack').style.display='none';
+  document.getElementById('cardSource').textContent=card.source||'';
+  document.getElementById('cardType').innerHTML=card.type==='fill'?`<span class="tag tag-pending">填空题</span>`:`<span class="tag tag-print">问答题</span>`;
+  // 填空题：显示挖空后的句子
+  if(card.type==='fill'){
+    document.getElementById('cardQuestion').innerHTML=card.display+'<br><span style="font-size:13px;color:var(--text-light);margin-top:8px;display:inline-block">💭 想想空格里应该填什么？</span>';
+  } else {
+    document.getElementById('cardQuestion').textContent=card.question;
+  }
+  document.getElementById('cardAnswer').textContent=card.answer;
+  document.getElementById('flipBtn').style.display='inline-block';
+  document.getElementById('flipBtn').textContent='👆 点击卡片或这里翻面';
+  document.querySelectorAll('#masteryBtns button').forEach(b=>b.style.display='none');
+  document.getElementById('cardPos').textContent=(reviewIdx+1)+' / '+reviewQueue.length;
+}
+
+function flipCard(){
+  if(reviewQueue.length===0)return;
+  isFlipped=!isFlipped;
+  document.getElementById('flashcardFront').style.display=isFlipped?'none':'block';
+  document.getElementById('flashcardBack').style.display=isFlipped?'block':'none';
+  document.querySelectorAll('#masteryBtns button').forEach(b=>b.style.display=isFlipped?'inline-block':'none');
+}
+
+function markMastery(level){
+  const card=reviewQueue[reviewIdx];if(!card)return;
+  const real=flashcards.find(c=>c.id===card.id);
+  if(real){real.mastery=level;real.lastReview=todayStr;saveCards()}
+  renderStudyStats();
+  nextCard();
+}
+
+function nextCard(){reviewIdx++;showCard()}
+function prevCard(){reviewIdx--;showCard()}
+
+function delCard(id){if(!confirm('确定删除？'))return;flashcards=flashcards.filter(c=>c.id!==id);saveCards();renderCardList();renderStudyStats()}
+
+function delDoc(id){
+  const doc=studyDocs.find(d=>d.id===id);if(!doc)return;
+  if(!confirm(`确定删除资料「${doc.name}」？\n关联的 ${flashcards.filter(c=>c.sourceId===id).length} 张卡片也会删除`))return;
+  flashcards=flashcards.filter(c=>c.sourceId!==id);
+  studyDocs=studyDocs.filter(d=>d.id!==id);
+  saveCards();saveDocs();renderDocList();renderCardList();renderStudyStats();
+}
+
+function renderCardList(){
+  const sources=[...new Set(flashcards.map(c=>c.source||'').filter(s=>s))];
+  const fs=document.getElementById('filterCardSource');
+  const cur=fs?fs.value:'';
+  if(fs)fs.innerHTML='<option value="">全部资料</option>'+sources.map(s=>`<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
+  const mf=document.getElementById('filterCardMastery').value;
+  const src=document.getElementById('filterCardSource')?document.getElementById('filterCardSource').value:'';
+  const data=flashcards.filter(c=>{if(src&&c.source!==src)return false;if(mf&&((c.mastery||'未复习')!==mf))return false;return true});
+  const masteryTag={'未复习':'tag-noprint','不熟':'tag-fail','一般':'tag-pending','掌握':'tag-ok'};
+  const el=document.getElementById('cardList');
+  if(data.length===0){el.innerHTML='<div style="text-align:center;color:var(--text-light);padding:20px">暂无卡片</div>';return}
+  el.innerHTML=data.map(c=>`
+    <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="display:flex;gap:4px;align-items:center">
+          <span class="tag ${c.type==='fill'?'tag-pending':'tag-print'}">${c.type==='fill'?'填空':'问答'}</span>
+          <span class="tag ${masteryTag[c.mastery||'未复习']||''}">${c.mastery||'未复习'}</span>
+        </div>
+        <button class="btn btn-danger" onclick="delCard(${c.id})">删</button>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">${c.type==='fill'?(c.display+' ___'):c.question}</div>
+      <div style="font-size:12px;color:var(--text-light)">答案：${c.answer.length>60?c.answer.slice(0,60)+'...':c.answer}</div>
+    </div>`).join('');
+}
+
+function renderDocList(){
+  const el=document.getElementById('docList');
+  if(studyDocs.length===0){el.innerHTML='<div style="text-align:center;color:var(--text-light);padding:20px">暂无资料</div>';return}
+  el.innerHTML=studyDocs.map(d=>{
+    const cnt=flashcards.filter(c=>c.sourceId===d.id).length;
+    return`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:14px;font-weight:600">${d.name}</div>
+        <div style="font-size:12px;color:var(--text-light)">${cnt} 张卡片 | 上传于 ${d.uploadDate}</div>
+      </div>
+      <button class="btn btn-danger" onclick="delDoc(${d.id})">删除</button>
+    </div>`}).join('');
+}
+
+// ==================== TXT上传 + 自动出题 ====================
+async function handleTxtUpload(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  document.getElementById('txtStatus').innerHTML='正在生成卡片...';
+  try{
+    const text=await file.text();
+    if(!text||text.trim().length<10){document.getElementById('txtStatus').innerHTML='<span style="color:var(--danger)">文件内容太少</span>';return}
+
+    const docId=Date.now();
+    const docName=file.name.replace(/\.(txt|md)$/,'');
+    studyDocs.push({id:docId,name:docName,content:text,uploadDate:todayStr});
+    saveDocs();
+
+    // 按句子拆分（句号、换行、分号）
+    const sentences=text.split(/[。\n；;！!？?]/).map(s=>s.trim()).filter(s=>s.length>=10&&s.length<=200);
+    let count=0;
+
+    sentences.forEach((s,i)=>{
+      // 一半做填空，一半做问答
+      if(i%2===0){
+        // 填空题：挖掉一个关键词（取句子中间的一个2-6字的词）
+        const words=s.split(/[，,\s、]/).filter(w=>w.length>=2&&w.length<=6);
+        if(words.length>=2){
+          const target=words[Math.floor(words.length/2)];
+          const display=s.replace(target,'＿＿＿＿');
+          if(display!==s){
+            flashcards.push({id:Date.now()+Math.random(),source:docName,sourceId:docId,type:'fill',question:s,display:display,answer:target,mastery:'未复习',lastReview:''});
+            count++;
+          }
+        }
+      }
+      // 问答题：句子做问题，上下文做答案
+      if(i%3===0){
+        const q=s.length>30?s.slice(0,30)+'...':s;
+        // 答案取前后文
+        const ctxSentences=[];
+        if(i>0)ctxSentences.push(sentences[i-1]);
+        ctxSentences.push(s);
+        if(i<sentences.length-1)ctxSentences.push(sentences[i+1]);
+        flashcards.push({id:Date.now()+Math.random()+1,source:docName,sourceId:docId,type:'qa',question:'这段内容讲的是什么？\n\n'+q,answer:ctxSentences.join('。'),mastery:'未复习',lastReview:''});
+        count++;
+      }
+    });
+
+    // 如果生成的卡片太少，按段落兜底
+    if(count<3){
+      const paragraphs=text.split(/\n+/).map(s=>s.trim()).filter(s=>s.length>10);
+      paragraphs.forEach((p,i)=>{
+        flashcards.push({id:Date.now()+Math.random()+i,source:docName,sourceId:docId,type:'qa',question:p.slice(0,30)+'...',answer:p,mastery:'未复习',lastReview:''});
+        count++;
+      });
+    }
+
+    saveCards();
+    document.getElementById('txtStatus').innerHTML=`<span style="color:var(--success)">✅ 成功生成 ${count} 张卡片！</span>`;
+    renderDocList();renderCardList();renderStudyStats();
+  }catch(e){
+    document.getElementById('txtStatus').innerHTML=`<span style="color:var(--danger)">出错：${e.message}</span>`;
+  }
+}
+
+// ==================== 初始化 ====================
+function init(){
+  renderEmpSelects();
+  renderTable();
+  renderCalendar();
+  renderReturns();
+  renderDashboard();
+  renderStudyStats();
+  renderDocList();
+  renderCardList();
+  loadMemoData();
+}
+
+function loadMemoData(){
+  if(records.length>0)return;
+  const chenId='emp_1';
+  const julyData=[
+    ['2026-07-01',23,0,0,0,'有'],['2026-07-02',22.5,0,0,0,'有'],['2026-07-03',22.5,1,5,0,'有'],
+    ['2026-07-04',10.5,0,0,0,'有'],['2026-07-06',23,0,5,0,'有'],['2026-07-07',17.5,0,5,0,'有'],
+    ['2026-07-08',14,1,5,0,'有'],['2026-07-09',14,0,0,0,'有'],['2026-07-10',13,1,0,5,'有'],
+    ['2026-07-11',6,1,0,0,'有'],['2026-07-13',22,0,5,0,'有'],['2026-07-14',24.5,0,0,0,'有'],
+    ['2026-07-15',21.5,0,0,15,'有'],['2026-07-16',20,0,18,0,'有'],['2026-07-17',22.5,0,0,0,'有'],
+    ['2026-07-18',22.5,0,8,0,'有'],['2026-07-20',22,0,10,0,'有'],['2026-07-21',23,2,0,0,'有'],
+    ['2026-07-22',23,0,0,0,'有'],['2026-07-23',22,0,0,0,'有'],['2026-07-24',23.5,0,0,0,'有']
+  ];
+  julyData.forEach((item,idx)=>{records.push({id:1000000000000+idx,date:item[0],empId:chenId,qty:item[1],deduct:item[2],penalty:item[3],bonus:item[4],print:item[5]})});
+  ['2026-07-05','2026-07-12','2026-07-19'].forEach(d=>{if(!restDays.includes(d))restDays.push(d)});
+  saveRecords();saveRest();renderTable();renderCalendar();renderDashboard();
+}
+
+function loadReturnMemoData(){
+  if(returns.length>0)return;
+  const returnData=[
+    {platform:'拼多多',item:'飞鸟',type:'退货',status:'待处理',amount:0,note:'历史记录'},
+    {platform:'淘宝',item:'雾屿',type:'退货',status:'已处理',amount:0,note:''},
+    {platform:'淘宝',item:'波提欧',type:'漏发',status:'已处理',amount:5,note:'漏发补发扣5'},
+    {platform:'淘宝',item:'飞霄',type:'退货',status:'已处理',amount:0,note:''},
+    {platform:'拼多多',item:'波提欧',type:'漏发',status:'已处理',amount:5,note:'漏发补发扣5'},
+    {platform:'淘宝',item:'雾屿',type:'漏发',status:'已处理',amount:0,note:'呆毛漏发'},
+    {platform:'拼多多',item:'月光',type:'退货',status:'待处理',amount:0,note:'历史记录'},
+    {platform:'拼多多',item:'夜莺',type:'补发',status:'已处理',amount:10,note:'发断后发补发扣10'},
+    {platform:'淘宝',item:'夜莺',type:'补发',status:'已处理',amount:8,note:'夜莺正面右侧鬓发，发断前发补发扣8'},
+    {platform:'淘宝',item:'玄鸟前发B',type:'补发',status:'已处理',amount:8,note:'前发B补发扣8'},
+    {platform:'拼多多',item:'玄鸟',type:'拦截退回',status:'已处理',amount:0,note:''},
+    {platform:'淘宝',item:'飞霄',type:'拦截退回',status:'已处理',amount:0,note:''},
+    {platform:'拼多多',item:'澜后发',type:'补发',status:'已处理',amount:10,note:'发断补发扣10'},
+    {platform:'淘宝',item:'澜后发',type:'补发',status:'待处理',amount:10,note:'后发发断扣10'}
+  ];
+  returnData.forEach((item,idx)=>{
+    returns.push({id:2000000000000+idx,date:'2026-07-21',platform:item.platform,item:item.item,type:item.type,status:item.status,amount:item.amount,note:item.note,tracking:'',order:''});
+  });
+  saveReturns();renderReturns();renderDashboard();
+}
+
+init();
+loadReturnMemoData();
+</script>
+</body>
+</html>
